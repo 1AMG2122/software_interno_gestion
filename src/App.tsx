@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, useRef } from "react";
+import LandingPage from "./LandingPage";
 
 type Priority = "baja" | "media" | "alta";
 type Status = "abierta" | "en progreso" | "en espera" | "resuelta" | "cerrada";
@@ -268,7 +269,7 @@ function saveData(data: any) {
 export default function App() {
   const [data, setData] = useState(loadData);
   const [currentUserId, setCurrentUserId] = useState<string | null>(data.currentUserId);
-  const [view, setView] = useState<"login" | "dashboard" | "list" | "detail" | "users">("login");
+  const [view, setView] = useState<"landing" | "login" | "dashboard" | "list" | "detail" | "users">("landing");
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterState>({
     q: "",
@@ -292,7 +293,7 @@ export default function App() {
   // Auto-login if remembered
   useEffect(() => {
     if (currentUserId) setView("dashboard");
-  }, []);
+  }, [currentUserId]);
 
   const login = (email: string, password: string) => {
     const user = data.users.find((u: User) => u.email === email && u.password === password);
@@ -482,8 +483,11 @@ export default function App() {
     if (u) { setCurrentUserId(u.id); setView("dashboard"); }
   };
 
-  if (!currentUser || view === "login") {
-    return <LoginScreen onLogin={login} quickLogin={quickLogin} />;
+  if (!currentUser) {
+    if (view === "login") {
+      return <LoginScreen onLogin={login} quickLogin={quickLogin} onBack={() => setView("landing")} />;
+    }
+    return <LandingPage onLogin={() => setView("login")} />;
   }
 
   return (
@@ -656,7 +660,7 @@ export default function App() {
   );
 }
 
-function LoginScreen({ onLogin, quickLogin }: { onLogin: (e: string, p: string) => boolean; quickLogin: (r: Role) => void }) {
+function LoginScreen({ onLogin, quickLogin, onBack }: { onLogin: (e: string, p: string) => boolean; quickLogin: (r: Role) => void; onBack: () => void }) {
   const [email, setEmail] = useState("admin@gius.test");
   const [password, setPassword] = useState("admin123");
   const [error, setError] = useState<string | null>(null);
@@ -710,8 +714,11 @@ function LoginScreen({ onLogin, quickLogin }: { onLogin: (e: string, p: string) 
               />
             </label>
             {error && <div className="rounded-lg bg-red-50 px-3 py-2 text-sm text-red-700"> {error} </div>}
-            <button className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 active:bg-zinc-900">
+            <button className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-zinc-900 px-4 py-2.5 text-sm font-medium text-white shadow-sm hover:bg-zinc-800 active:bg-zinc-900 transition">
               Entrar
+            </button>
+            <button type="button" onClick={onBack} className="inline-flex items-center justify-center gap-2 rounded-xl border border-zinc-200 bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 active:bg-zinc-100 transition">
+              Volver al inicio
             </button>
           </form>
 
